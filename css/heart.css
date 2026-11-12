@@ -1,0 +1,20 @@
+/* Label 3D, titik penunjuk, EKG — eksperimen Jantung */
+#heartScene { background: #030305; position: relative; }
+.hx-layer { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+.hx-layer svg { position: absolute; inset: 0; }
+.hx-line { stroke: rgba(255,255,255,.55); stroke-width: 1; }
+.hx-dot {
+  position: absolute; left: 0; top: 0; width: 16px; height: 16px; border-radius: 50%;
+  background: rgba(10,18,22,.85); border: 2px solid #d7e3e0; padding: 0; cursor: pointer; pointer-events: auto;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+.hx-dot:hover, .hx-dot.sel { border-color: var(--accent-light, #ff9aa8); background: #fff; box-shadow: 0 0 0 4px rgba(255,154,168,.28); }
+.hx-dot:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.hx-label {
+  position: absolute; left: 0; top: 0; pointer-events: auto; cursor: pointer; white-space: nowrap;
+  font: 600 13px/1.2 'Instrument Sans', system-ui, sans-serif; color: #fff; padding: 0 2px 3px;
+  border-bottom: 1px solid rgba(255,255,255,.55); text-shadow: 0 1px 4px rgba(0,0,0,.9);
+}
+.hx-label:hover { color: #ffc2ca; }
+.hx-ecg { width: 100%; height: auto; border-radius: 10px; border: 1px solid #0d2a22; display: block; }
+@media (max-width: 640px) { .hx-label { font-size: 11px; } .hx-dot { width: 14px; height: 14px; } }

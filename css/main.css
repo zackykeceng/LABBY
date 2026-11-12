@@ -1,0 +1,215 @@
+/* ============================================================
+   MAIN.CSS — Token desain, dasar, header, kerangka halaman
+   Arah visual: "buku catatan laboratorium" — kertas dingin,
+   tinta biru-hijau gelap, jendela 3D gelap sebagai instrumen.
+   ============================================================ */
+
+:root {
+  /* Netral (ungu-tinta, hangat) */
+  --mist: #f1eeff;
+  --paper: #ffffff;
+  --paper-2: #f6f3ff;
+  --ink: #231a4a;
+  --ink-2: #4a4170;
+  --ink-3: #685f8f;
+  --line: #ddd6f7;
+  --line-strong: #b9aee8;
+  --signal: #2cf5b0;
+
+  /* Warna ceria */
+  --sun: #ffc93c;
+  --sun-soft: #fff0b8;
+  --mint: #3ddc97;
+  --mint-soft: #d5f7e6;
+  --sky: #4fb3ff;
+  --sky-soft: #d9eeff;
+  --violet: #7c5cff;
+  --violet-soft: #e6e0ff;
+
+  /* Aksen eksperimen (diganti per panel) */
+  --accent: #ff5277;
+  --accent-soft: #ffe1e8;
+  --accent-dark: #c2183f;
+  --accent-light: #ffb3c2;
+
+  /* Status */
+  --ok: #17803d;
+  --ok-soft: #e1f4e7;
+  --bad: #b42318;
+  --bad-soft: #fde8e6;
+
+  /* Skala ruang (4px) */
+  --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+  --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+
+  /* Radius bertingkat sesuai hierarki */
+  --r-ctl: 14px;     /* tombol, input */
+  --r-card: 24px;   /* kartu, panel */
+  --r-stage: 28px;  /* jendela 3D */
+  --r-pill: 999px;
+
+  /* Tipografi */
+  --font-display: 'Fredoka', 'Nunito', system-ui, sans-serif;
+  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fs-xs: 0.8125rem;   /* 13 */
+  --fs-sm: 0.9375rem;   /* 15 */
+  --fs-md: 1.0625rem;   /* 17 */
+  --fs-lg: 1.375rem;    /* 22 */
+  --fs-xl: 1.875rem;    /* 30 */
+
+  --header-h: 60px;
+  --focus: 0 0 0 3px var(--paper), 0 0 0 5px var(--ink);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h) + 1rem); }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--mist);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+button, select, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+
+.ico {
+  width: 1.25em; height: 1.25em; flex: none;
+  fill: none; stroke: currentColor; stroke-width: 1.75;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+.wordmark {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: 1.5rem; letter-spacing: -0.04em; line-height: 1; color: var(--ink);
+}
+.wordmark-sm { font-size: 1.25rem; }
+
+/* Lewati ke konten */
+.skip-link {
+  position: absolute; top: -100px; left: 1rem;
+  background: var(--ink); color: white;
+  padding: 0.75rem 1.25rem; border-radius: var(--r-ctl);
+  text-decoration: none; font-weight: 600; z-index: 10000;
+}
+.skip-link:focus { top: 1rem; }
+
+/* Transisi layar & pemuatan awal */
+.page-transition, .loading-overlay {
+  position: fixed; inset: 0; background: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.4s ease;
+}
+.page-transition { z-index: 99999; opacity: 0; pointer-events: none; }
+.page-transition.active { opacity: 1; pointer-events: auto; }
+.loading-overlay { z-index: 9999; }
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loader { text-align: center; color: #e8f1ef; font-weight: 500; }
+.loader p { margin-top: var(--space-3); font-size: var(--fs-sm); color: #b9c9c5; }
+.loader-pulse { width: 160px; height: 48px; overflow: visible; }
+.loader-pulse path {
+  fill: none; stroke: var(--signal); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 260; stroke-dashoffset: 260;
+  filter: drop-shadow(0 0 6px rgba(44,245,176,.6));
+  animation: draw 1.4s ease-in-out infinite;
+}
+.loading-error { color: #ffb4ab !important; max-width: 400px; margin-inline: auto; }
+
+/* Header eksperimen */
+.app-header {
+  position: sticky; top: 0; z-index: 100; height: var(--header-h);
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.header-container {
+  max-width: 1480px; margin: 0 auto; height: 100%;
+  padding: 0 var(--space-6);
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-4);
+}
+.brand { display: flex; align-items: center; gap: var(--space-3); }
+.brand-sep { width: 1px; height: 22px; background: var(--line-strong); }
+.header-nav { display: flex; gap: var(--space-2); align-items: center; }
+
+.back-btn {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  height: 38px; padding: 0 0.85rem 0 0.6rem;
+  background: transparent; border: 1px solid var(--line-strong); border-radius: var(--r-ctl);
+  font-size: var(--fs-sm); font-weight: 600; color: var(--ink);
+  transition: background .15s, border-color .15s;
+}
+.back-btn:hover { background: var(--paper-2); border-color: var(--ink-3); }
+
+.icon-btn {
+  width: 38px; height: 38px; border-radius: var(--r-ctl);
+  background: transparent; border: 1px solid transparent; color: var(--ink-2);
+  display: grid; place-items: center;
+  transition: background .15s, color .15s;
+}
+.icon-btn:hover { background: var(--paper-2); color: var(--ink); }
+.icon-sound .ico-off { display: none; }
+.icon-sound[aria-pressed="false"] .ico-on { display: none; }
+.icon-sound[aria-pressed="false"] .ico-off { display: block; color: var(--ink-3); }
+
+.header-progress {
+  display: flex; align-items: center; gap: var(--space-3);
+  margin-right: var(--space-2); padding-right: var(--space-3);
+  border-right: 1px solid var(--line);
+  font-size: var(--fs-xs); font-weight: 600; color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.header-progress .progress-bar { display: flex; gap: 3px; }
+.header-progress .pip { width: 14px; height: 6px; border-radius: 2px; background: var(--line); transition: background .4s; }
+.header-progress .pip.on { background: var(--ink); }
+.header-progress .badge-count { display: inline-flex; align-items: center; gap: 0.25rem; color: var(--ink); }
+.header-progress .badge-count .ico { width: 1.1em; height: 1.1em; }
+
+/* Tab disembunyikan (hanya penampung logika App) */
+.tab-nav { display: none; }
+
+/* Tema per eksperimen */
+.experiment-panel[data-panel="0"] { --accent: #ff5277; --accent-soft: #ffe1e8; --accent-dark: #c2183f; --accent-light: #ffb3c2; }
+.experiment-panel[data-panel="1"] { --accent: #12b5cb; --accent-soft: #d4f6fb; --accent-dark: #0a7586; --accent-light: #8defff; }
+
+.app-main { padding: 0 var(--space-6) var(--space-10); min-height: calc(100vh - var(--header-h)); }
+.content-container { max-width: 1480px; margin: 0 auto; padding-top: var(--space-6); }
+.experiment-panel { display: none; }
+.experiment-panel.active { display: block; animation: fadeIn 0.35s ease-out; }
+
+/* Tombol kembali ke atas */
+.fab-top {
+  position: fixed; bottom: var(--space-6); left: var(--space-6);
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--ink); color: white; border: none;
+  display: grid; place-items: center;
+  box-shadow: 0 6px 18px rgba(18,34,42,.3);
+  opacity: 0; pointer-events: none; transform: translateY(8px);
+  transition: opacity .25s, transform .25s; z-index: 90;
+}
+.fab-top.visible { opacity: 1; pointer-events: auto; transform: none; }
+
+@media (max-width: 640px) {
+  :root { --header-h: 56px; }
+  .header-container { padding: 0 var(--space-3); }
+  .app-main { padding: 0 var(--space-3) var(--space-8); }
+  .back-btn span { display: none; }
+  .back-btn { padding: 0 0.6rem; }
+  .brand-sep { display: none; }
+  .header-progress .progress-bar { display: none; }
+  .header-progress { padding-right: var(--space-2); margin-right: 0; }
+}

@@ -1,0 +1,155 @@
+/* ADDONS.CSS — Misi, lembar kerja, kuis, tutorial, mobile, cetak */
+
+/* Dua kolom: kiri misi + lembar kerja, kanan kuis (yang paling banyak dibaca) */
+.bottom-panel {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  grid-template-areas: "mission quiz" "lkpd quiz";
+  grid-template-rows: auto 1fr;
+  gap: var(--space-5); margin-top: var(--space-5); align-items: start;
+}
+.bottom-panel > :nth-child(1) { grid-area: mission; }
+.bottom-panel > :nth-child(2) { grid-area: lkpd; }
+.bottom-panel > :nth-child(3) { grid-area: quiz; }
+@media (max-width: 960px) {
+  .bottom-panel { grid-template-columns: 1fr; grid-template-areas: "mission" "quiz" "lkpd"; grid-template-rows: none; }
+}
+
+.addon-card {
+  background: var(--paper); border: 1px solid var(--line);
+  border-radius: var(--r-card); padding: var(--space-5) var(--space-6) var(--space-6);
+}
+.addon-header { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); min-height: 34px; }
+.addon-title {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-display); font-size: var(--fs-lg); font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+}
+.addon-title .ico { color: var(--accent); }
+
+/* Misi */
+.mission-list { display: flex; flex-direction: column; }
+.mission-item {
+  display: flex; align-items: flex-start; gap: var(--space-3);
+  padding: var(--space-3) 0; border-top: 1px solid var(--line);
+}
+.mission-item:first-child { border-top: 0; padding-top: 0; }
+.mission-check {
+  flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 6px;
+  border: 1.5px solid var(--line-strong); background: var(--paper);
+  display: grid; place-items: center; color: #fff; font-size: 0.8rem; font-weight: 800;
+  transition: background .3s, border-color .3s;
+}
+.mission-item.completed .mission-check { background: var(--ok); border-color: var(--ok); animation: scaleIn .25s ease-out; }
+.mission-text { flex: 1; font-size: var(--fs-md); line-height: 1.45; color: var(--ink); }
+.mission-item.completed .mission-text { color: var(--ink-3); }
+
+/* Lembar kerja */
+.lkpd-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.lkpd-table thead th {
+  text-align: left; padding: 0 0.5rem 0.5rem 0; font-weight: 600; font-size: var(--fs-xs);
+  color: var(--ink-3); border-bottom: 1px solid var(--line-strong);
+}
+.lkpd-table td { padding: 0.6rem 0.5rem 0.6rem 0; border-bottom: 1px solid var(--line); color: var(--ink); }
+.lkpd-table td:first-child { color: var(--ink-3); }
+.lkpd-table td:last-child { font-weight: 600; color: var(--accent-dark); text-align: right; padding-right: 0; }
+.lkpd-table thead th:last-child { text-align: right; padding-right: 0; }
+.lkpd-table tbody tr:last-child td { border-bottom: 0; }
+
+.empty-state {
+  padding: var(--space-5); border: 1.5px dashed var(--line-strong); border-radius: 10px;
+  color: var(--ink-2); font-size: var(--fs-sm); line-height: 1.55;
+}
+.empty-state .empty-emoji { display: none; }
+
+/* Kuis */
+.quiz-progress { display: flex; gap: 4px; margin-bottom: var(--space-5); }
+.quiz-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--line); transition: background .3s; }
+.quiz-dot.correct { background: var(--ok); }
+.quiz-dot.wrong { background: var(--bad); }
+
+.quiz-question { padding-bottom: var(--space-5); margin-bottom: var(--space-5); border-bottom: 1px solid var(--line); }
+.quiz-question:last-child { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+.quiz-q-text { display: flex; gap: var(--space-3); margin-bottom: var(--space-3); font-size: var(--fs-md); font-weight: 600; line-height: 1.4; color: var(--ink); }
+.quiz-q-number { flex: none; min-width: 1.2em; font-family: var(--font-display); font-weight: 700; color: var(--accent-dark); }
+
+.quiz-option {
+  display: flex; align-items: center; gap: var(--space-3); width: 100%;
+  margin-bottom: 8px; padding: 0.7rem 0.85rem; text-align: left;
+  background: var(--paper); border: 1px solid var(--line-strong); border-radius: 10px;
+  font-size: var(--fs-sm); font-weight: 500; color: var(--ink); line-height: 1.4;
+  transition: background .15s, border-color .15s;
+}
+.quiz-option:hover:not(:disabled) { background: var(--paper-2); border-color: var(--ink-3); }
+.quiz-option:disabled { cursor: default; }
+.quiz-option:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.quiz-option-letter {
+  flex: none; width: 26px; height: 26px; border-radius: 6px; background: var(--paper-2);
+  border: 1px solid var(--line); display: grid; place-items: center;
+  font-size: var(--fs-xs); font-weight: 700; color: var(--ink-2);
+}
+.quiz-option.correct { background: var(--ok-soft); border-color: var(--ok); color: #0f4d26; }
+.quiz-option.correct .quiz-option-letter { background: var(--ok); border-color: var(--ok); color: #fff; }
+.quiz-option.wrong { background: var(--bad-soft); border-color: var(--bad); color: #7a1a12; }
+.quiz-option.wrong .quiz-option-letter { background: var(--bad); border-color: var(--bad); color: #fff; }
+
+.quiz-feedback { display: none; margin-top: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: 10px; font-size: var(--fs-sm); line-height: 1.55; }
+.quiz-feedback.show { display: block; animation: fadeIn .25s; }
+.quiz-feedback.correct { background: var(--ok-soft); color: #0f4d26; }
+.quiz-feedback.wrong { background: var(--bad-soft); color: #7a1a12; }
+.quiz-feedback b { display: block; margin-bottom: 0.15rem; }
+
+/* Lencana */
+.badge-notification {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999;
+  display: flex; align-items: center; gap: var(--space-2);
+  background: var(--ink); color: #fff; padding: 0.7rem 1.1rem 0.7rem 0.8rem; border-radius: var(--r-pill);
+  font-family: var(--font-display); font-weight: 600; font-size: var(--fs-md);
+  box-shadow: 0 16px 36px -12px rgba(18,34,42,.6);
+  max-width: calc(100vw - 2rem); animation: slideDown .4s ease-out;
+}
+.badge-notification .ico { color: var(--signal); }
+
+/* Kontrol zoom di layar sentuh */
+.mobile-controls { position: absolute; top: 50%; left: var(--space-3); transform: translateY(-50%); display: none; flex-direction: column; gap: 6px; z-index: 3; }
+@media (pointer: coarse) { .mobile-controls { display: flex; } }
+.mobile-btn {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(10,18,22,.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.14); color: #fff; -webkit-tap-highlight-color: transparent;
+}
+.mobile-btn:active { background: rgba(255,255,255,.25); }
+
+/* Istilah */
+.glossary-term { border-bottom: 1.5px dotted var(--accent-light); cursor: help; position: relative; }
+.glossary-term:hover::after, .glossary-term:focus::after {
+  content: attr(data-tooltip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+  width: max-content; max-width: 220px; margin-bottom: 6px; padding: 6px 10px; border-radius: 6px;
+  background: #fff; color: var(--ink); font-size: var(--fs-xs); line-height: 1.4; text-align: center;
+  white-space: normal; z-index: 100; pointer-events: none; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+}
+
+/* Panduan awal di dalam jendela 3D */
+.tutorial-overlay {
+  position: absolute; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center;
+  padding: var(--space-6); background: rgba(3,3,5,.8); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.tutorial-overlay.show { display: flex; animation: fadeIn .25s; }
+.tutorial-box {
+  width: 100%; max-width: 400px; padding: var(--space-6); text-align: left; cursor: default;
+  background: var(--paper); border-radius: var(--r-card); animation: scaleIn .3s ease-out;
+}
+.tutorial-box h3 { font-family: var(--font-display); font-size: var(--fs-xl); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; margin-bottom: var(--space-3); color: var(--ink); }
+.tutorial-box p { color: var(--ink-2); font-size: var(--fs-md); line-height: 1.6; margin-bottom: var(--space-5); }
+.tutorial-box p b { color: var(--ink); font-weight: 600; }
+.tutorial-box .btn { width: auto; padding: 0 1.4rem; }
+@media (max-width: 480px) { .tutorial-overlay { padding: var(--space-3); } .tutorial-box { padding: var(--space-5); } }
+
+@media print {
+  .app-header, .tab-nav, .scene-container, .control-panel, .exp-header, .toast-container,
+  .modal-overlay, .badge-notification, .tutorial-overlay, .fab-top, .mobile-controls { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .addon-card { border: 1px solid #ccc; break-inside: avoid; background: white; }
+  .lkpd-table { font-size: 12px; }
+  .bottom-panel { display: block; }
+  .bottom-panel > div:not(:has(.lkpd-table)) { display: none; }
+  .btn { display: none; }
+}

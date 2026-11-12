@@ -1,0 +1,101 @@
+/* ============================================================
+   HOME.CSS — Beranda Labby
+   Kertas grafik (seperti kertas EKG / spirogram) sebagai latar,
+   satu garis denyut yang tergambar saat halaman dibuka.
+   ============================================================ */
+
+.home-screen {
+  position: fixed; inset: 0; z-index: 9999; overflow-y: auto;
+  background-color: var(--mist);
+  background-image:
+    linear-gradient(to right, rgba(18,34,42,.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(18,34,42,.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+.home-inner {
+  max-width: 1120px; min-height: 100%; margin: 0 auto;
+  padding: var(--space-6) var(--space-6) var(--space-8);
+  display: flex; flex-direction: column;
+}
+
+.home-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); }
+.home-top .wordmark { font-size: 1.75rem; }
+.home-tag { font-size: var(--fs-sm); color: var(--ink-3); font-weight: 500; }
+
+.home-hero { padding: clamp(1.5rem, 6vh, 3.5rem) 0 var(--space-4); }
+.home-title {
+  max-width: 17ch; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(2.5rem, 6.4vw, 4.75rem); line-height: 0.98; letter-spacing: -0.045em;
+  color: var(--ink); text-wrap: balance;
+  animation: rise .7s cubic-bezier(.2,.7,.2,1) both;
+}
+.home-lead {
+  max-width: 46ch; margin-top: var(--space-5); font-size: var(--fs-lg); line-height: 1.5; color: var(--ink-2);
+  text-wrap: pretty; animation: rise .7s .12s cubic-bezier(.2,.7,.2,1) both;
+}
+
+/* Garis denyut: satu-satunya gerak otomatis di beranda */
+.home-pulse { display: block; width: 100%; height: 80px; margin-top: var(--space-6); overflow: visible; }
+.pulse-heart {
+  fill: none; stroke: var(--ink); stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: drawLong 3.2s .35s cubic-bezier(.4,0,.2,1) forwards;
+}
+
+/* Kartu eksperimen */
+.home-choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-top: var(--space-6); }
+
+.exp-card {
+  --c: #d63a4e; --c-light: #ff9aa8;
+  position: relative; display: grid; grid-template-columns: 148px minmax(0, 1fr); gap: var(--space-5);
+  align-items: stretch; text-align: left; padding: var(--space-4);
+  background: #0b1418; color: #e8f1ef; border: 0; border-radius: var(--r-stage);
+  overflow: hidden; isolation: isolate;
+  box-shadow: 0 0 0 1px rgba(18,34,42,.2), 0 22px 40px -26px rgba(18,34,42,.7);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.exp-card::before {
+  content: ''; position: absolute; z-index: -1; left: -40px; top: -40px; width: 260px; height: 260px; border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--c) 45%, transparent), transparent);
+}
+.exp-lungs { --c: #12909f; --c-light: #7fe0ea; }
+.exp-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 1px rgba(18,34,42,.3), 0 30px 46px -24px rgba(18,34,42,.8); }
+.exp-card:focus-visible { outline: 3px solid var(--ink); outline-offset: 4px; border-radius: var(--r-stage); }
+
+.exp-art { width: 100%; height: auto; align-self: center; overflow: visible; }
+.exp-art path { fill: none; stroke: var(--c-light); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.exp-art .art-glow { fill: color-mix(in srgb, var(--c) 28%, transparent); stroke: none; }
+.exp-card:hover .exp-art { animation: beat 1.1s ease-in-out infinite; transform-origin: 50% 60%; }
+.exp-lungs:hover .exp-art { animation: breathe 3s ease-in-out infinite; }
+@keyframes beat { 0%,100% { transform: scale(1); } 14% { transform: scale(1.06); } 28% { transform: scale(1); } 42% { transform: scale(1.045); } }
+@keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+.exp-body { display: flex; flex-direction: column; padding: var(--space-3) var(--space-8) var(--space-2) 0; min-width: 0; }
+.exp-name { font-family: var(--font-display); font-weight: 700; font-size: 2rem; line-height: 1; letter-spacing: -0.035em; color: #fff; }
+.exp-sub { margin-top: var(--space-2); font-size: var(--fs-sm); line-height: 1.45; color: #aebfbb; max-width: 34ch; }
+.exp-meta { display: flex; flex-wrap: wrap; gap: 0.35rem 1rem; margin-top: var(--space-4); font-size: var(--fs-xs); color: #cfdcd9; font-weight: 500; }
+.exp-progress { display: flex; align-items: center; gap: var(--space-3); margin-top: auto; padding-top: var(--space-4); font-size: var(--fs-xs); color: #aebfbb; font-variant-numeric: tabular-nums; }
+.exp-progress .bar { flex: 0 0 84px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.16); overflow: hidden; }
+.exp-progress .bar i { display: block; height: 100%; width: 0; background: var(--c-light); border-radius: 2px; transition: width .6s; }
+
+.exp-go {
+  position: absolute; right: var(--space-4); top: var(--space-4); width: 40px; height: 40px; border-radius: 50%;
+  display: grid; place-items: center; background: var(--c-light); color: #0b1418;
+  transition: transform .25s;
+}
+.exp-card:hover .exp-go { transform: translateX(3px); }
+
+.home-foot { margin-top: auto; padding-top: var(--space-8); font-size: var(--fs-xs); color: var(--ink-3); }
+
+@media (max-width: 900px) {
+  .home-choices { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .home-inner { padding: var(--space-4) var(--space-4) var(--space-6); }
+  .home-tag { display: none; }
+  .home-lead { font-size: var(--fs-md); }
+  .home-pulse { height: 64px; margin-top: var(--space-6); }
+  .exp-card { grid-template-columns: 92px minmax(0, 1fr); gap: var(--space-3); }
+  .exp-name { font-size: 1.6rem; }
+  .exp-body { padding-right: var(--space-8); }
+}
