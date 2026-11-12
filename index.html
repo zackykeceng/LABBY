@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Labby — Belajar Sains Interaktif</title>
+<meta name="description" content="Labby — Platform belajar sains interaktif.">
+<meta name="theme-color" content="#7c5cff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/addons.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/heart.css">
+<link rel="stylesheet" href="css/lungs.css">
+<link rel="stylesheet" href="css/playful.css">
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-sound-on" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></symbol>
+    <symbol id="i-sound-off" viewBox="0 0 24 24"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="m16 9 5 6M21 9l-5 6"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l9 9-8 8-9-9z"/><circle cx="7.5" cy="8.5" r="1"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3 5 14h6l-1 7 8-11h-6l1-7z"/></symbol>
+    <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+    <symbol id="i-cube" viewBox="0 0 24 24"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3z"/><path d="M12 12 4 7.5M12 12l8-4.5M12 12v9"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h12l-2 4 2 4H5"/></symbol>
+    <symbol id="i-notebook" viewBox="0 0 24 24"><path d="M6 3h11a2 2 0 0 1 2 2v16H8a2 2 0 0 1-2-2V3z"/><path d="M6 19a2 2 0 0 1 2-2h11M10 8h6M10 12h6"/></symbol>
+    <symbol id="i-quiz" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/></symbol>
+    <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-medal" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="m8.5 13.5-1.5 7 5-3 5 3-1.5-7"/></symbol>
+    <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7"/></symbol>
+    <symbol id="i-move" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></symbol>
+  </defs>
+</svg>
+
+<!-- Transisi antar layar -->
+<div id="pageTransition" class="page-transition" aria-hidden="true">
+  <div class="loader">
+    <svg class="loader-pulse" viewBox="0 0 160 48" aria-hidden="true"><path d="M0 28h40l6-4 6 4h10l6-22 8 40 7-18h8l5-3 4 3h60"/></svg>
+    <p>Menyiapkan eksperimen…</p>
+  </div>
+</div>
+
+<!-- ============ LAYAR 1: BERANDA ============ -->
+<div id="homeScreen" class="home-screen">
+  <div class="home-inner">
+    <header class="home-top">
+      <span class="wordmark" aria-label="Labby"><span aria-hidden="true">L</span><span aria-hidden="true">a</span><span aria-hidden="true">b</span><span aria-hidden="true">b</span><span aria-hidden="true">y</span></span>
+      <span class="home-tag">Lab sains seru untuk kelas 8</span>
+    </header>
+
+    <section class="home-hero">
+      <h1 class="home-title">Yuk, intip isi tubuhmu lewat model 3D!</h1>
+      <p class="home-lead">Putar jantung dan paru-paru, coba ubah detak dan napasnya, lalu catat apa yang kamu temukan.</p>
+      <svg class="home-pulse" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+        <path class="pulse-heart" pathLength="1" d="M0 70 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110"/>
+      </svg>
+    </section>
+
+    <main class="home-choices" aria-label="Pilih eksperimen">
+      <button class="exp-card exp-heart" onclick="App.openExperiment(0)">
+        <svg class="exp-art" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="art-glow" d="M60 104C30 84 16 62 20 44c4-16 24-20 34-6l6 8 6-8c10-14 30-10 34 6 4 18-10 40-40 60z"/>
+          <path d="M60 104C30 84 16 62 20 44c4-16 24-20 34-6l6 8 6-8c10-14 30-10 34 6 4 18-10 40-40 60z"/>
+          <path d="M60 46v50M62 40C62 18 84 12 90 26M52 38C48 24 36 18 30 26"/>
+        </svg>
+        <span class="exp-body">
+          <span class="exp-name">Jantung</span>
+          <span class="exp-sub">Lihat bagaimana darah dipompa dan listrik mengatur detaknya</span>
+          <span class="exp-meta"><span>20 struktur</span><span>3 misi</span><span>3 soal</span></span>
+          <span class="exp-progress" data-exp="heart"><span class="bar"><i></i></span><span class="txt">Belum dimulai</span></span>
+        </span>
+        <span class="exp-go"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg><span class="sr-only">Mulai eksperimen jantung</span></span>
+      </button>
+
+      <button class="exp-card exp-lungs" onclick="App.openExperiment(1)">
+        <svg class="exp-art" viewBox="0 0 120 120" aria-hidden="true">
+          <path d="M60 14v34M60 48 44 62M60 48l16 14"/>
+          <path class="art-glow" d="M50 48C34 44 16 66 16 92c0 10 10 12 18 8 10-5 16-20 16-52z"/>
+          <path d="M50 48C34 44 16 66 16 92c0 10 10 12 18 8 10-5 16-20 16-52z"/>
+          <path class="art-glow" d="M70 48c16-4 34 18 34 44 0 10-10 12-18 8-10-5-16-20-16-52z"/>
+          <path d="M70 48c16-4 34 18 34 44 0 10-10 12-18 8-10-5-16-20-16-52z"/>
+          <path d="M44 62 32 78M44 62l-2 18M76 62l12 16M76 62l2 18"/>
+        </svg>
+        <span class="exp-body">
+          <span class="exp-name">Paru-paru</span>
+          <span class="exp-sub">Lihat cara kita bernapas dan apa yang terjadi saat terkena asap</span>
+          <span class="exp-meta"><span>15 struktur</span><span>3 misi</span><span>3 soal</span></span>
+          <span class="exp-progress" data-exp="lungs"><span class="bar"><i></i></span><span class="txt">Belum dimulai</span></span>
+        </span>
+        <span class="exp-go"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg><span class="sr-only">Mulai eksperimen paru-paru</span></span>
+      </button>
+    </main>
+
+    <footer class="home-foot">Biologi · Sistem organ manusia · Kelas 8</footer>
+  </div>
+</div>
+
+<!-- ============ LAYAR 2: EKSPERIMEN ============ -->
+<div id="appScreen" class="app-screen" style="display: none;">
+
+  <a href="#panelHeart" class="skip-link">Lewati ke konten</a>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loader">
+      <svg class="loader-pulse" viewBox="0 0 160 48" aria-hidden="true"><path d="M0 28h40l6-4 6 4h10l6-22 8 40 7-18h8l5-3 4 3h60"/></svg>
+      <p id="loadingStatus">Sebentar ya, Labby lagi disiapkan…</p>
+      <p id="loadingError" class="loading-error" style="display:none"></p>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <button class="back-btn" id="btnBackToHome" aria-label="Kembali ke beranda">
+          <svg class="ico" aria-hidden="true"><use href="#i-back"/></svg><span>Beranda</span>
+        </button>
+        <span class="brand-sep" aria-hidden="true"></span>
+        <span class="wordmark wordmark-sm" aria-label="Labby"><span aria-hidden="true">L</span><span aria-hidden="true">a</span><span aria-hidden="true">b</span><span aria-hidden="true">b</span><span aria-hidden="true">y</span></span>
+      </div>
+      <nav class="header-nav" aria-label="Alat">
+        <div id="headerProgress" class="header-progress" aria-live="polite"></div>
+        <button class="icon-btn" id="btnResetData" title="Hapus semua progres" aria-label="Hapus semua progres"><svg class="ico" aria-hidden="true"><use href="#i-trash"/></svg></button>
+        <button class="icon-btn icon-sound" id="btnSound" title="Suara" aria-label="Suara" aria-pressed="true"><svg class="ico ico-on" aria-hidden="true"><use href="#i-sound-on"/></svg><svg class="ico ico-off" aria-hidden="true"><use href="#i-sound-off"/></svg></button>
+        <button class="icon-btn" id="btnFullscreen" title="Layar penuh" aria-label="Layar penuh"><svg class="ico" aria-hidden="true"><use href="#i-expand"/></svg></button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Tab dipertahankan untuk logika App; hanya satu yang tampil per eksperimen -->
+  <nav class="tab-nav" aria-hidden="true">
+    <div class="tab-container">
+      <button class="tab-item active" data-exp="0" data-color="#d63a4e" tabindex="-1"><span class="tab-label">Jantung dan peredaran darah</span></button>
+      <button class="tab-item" data-exp="1" data-color="#12909f" tabindex="-1"><span class="tab-label">Sistem pernapasan</span></button>
+    </div>
+  </nav>
+
+  <main class="app-main">
+    <div class="content-container">
+      <section class="experiment-panel active" data-panel="0" id="panelHeart"></section>
+      <section class="experiment-panel" data-panel="1" id="panelLungs"></section>
+    </div>
+  </main>
+
+  <button class="fab-top" id="btnScrollTop" aria-label="Kembali ke atas" title="Kembali ke atas"><svg class="ico" aria-hidden="true"><use href="#i-up"/></svg></button>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <button class="modal-close" id="modalClose" aria-label="Tutup"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button>
+      <div class="modal-emoji" id="modalEmoji"></div>
+      <h2 class="modal-title" id="modalTitle">Hebat!</h2>
+      <p class="modal-text" id="modalText"></p>
+      <button class="btn btn-primary" id="modalBtn">Lanjutkan</button>
+    </div>
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+</div>
+
+<script type="module">
+  import * as THREE_MODULE from 'three';
+  import { OrbitControls as OC_MODULE } from 'three/addons/controls/OrbitControls.js';
+  import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+  import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+  import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+  import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+  import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+  window.THREE = Object.assign({}, THREE_MODULE, { OrbitControls: OC_MODULE, EffectComposer, RenderPass, UnrealBloomPass, OutputPass, RoomEnvironment });
+  console.log('✓ Three.js r' + window.THREE.REVISION + ' terpasang');
+
+  const scripts = [
+    'js/utils.js',
+    'js/data/quiz.js',
+    'js/sound-manager.js',
+    'js/modules.js',
+    'js/three-scene.js',
+    'js/heart-kit.js',
+    'js/heart-3d.js',
+    'js/lungs-kit.js',
+    'js/lungs-3d.js',
+    'js/app.js'
+  ];
+
+  async function loadScripts() {
+    for (const src of scripts) {
+      const statusEl = document.getElementById('loadingStatus');
+      if (statusEl) statusEl.textContent = 'Memuat ' + src + '...';
+      try {
+        await new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = src;
+          s.onload = resolve;
+          s.onerror = () => reject(new Error('Gagal: ' + src));
+          document.body.appendChild(s);
+        });
+      } catch (err) {
+        const errEl = document.getElementById('loadingError');
+        if (errEl) { errEl.style.display = 'block'; errEl.textContent = '❌ ' + err.message; }
+        throw err;
+      }
+    }
+    if (typeof App !== 'undefined') App.init();
+  }
+  loadScripts().catch(() => {});
+</script>
+</body>
+</html>
