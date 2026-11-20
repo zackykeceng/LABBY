@@ -168,12 +168,6 @@ h1, h2, h3, h4, h5 { font-family: var(--font-display); }
   background-attachment: fixed;
 }
 .home-top .wordmark { font-size: 2.25rem; }
-.home-tag {
-  padding: 0.3rem 0.9rem; border: 2px solid var(--ink); border-radius: 999px; background: var(--sun);
-  color: var(--ink); font-weight: 800; box-shadow: 0 3px 0 var(--ink);
-}
-.home-title { font-weight: 700; letter-spacing: -0.02em; line-height: 1.02; max-width: 15ch; }
-.home-lead { font-weight: 600; font-size: 1.25rem; }
 .pulse-heart { stroke: #ff5277; stroke-width: 4; }
 
 .exp-card {
