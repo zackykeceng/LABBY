@@ -8,7 +8,7 @@ const LungsExperiment = {
     scene: null, depth: 50, rpm: 16, type: 'normal', lungsGroup: null, chambers: {}, airParticles: null,
     selectedPart: null, phase: 0, kit: null, clickables: [], labels: [],
     showLabels: true, showCond: true, dissect: 0, explode: 0, explodeTarget: 0, clipPlane: null,
-    isSmoking: false, smokeParticles: null, focus: null, spiro: []
+    isSmoking: false, smokeLevel: 0, smokeYears: 10, smokeFactor: 1, smoke: null, smokePts: null, tar: [], focus: null, spiro: []
   },
   missions: [
     { id: 'm1', text: 'Putar paru-paru dan klik Alveolus' },
@@ -141,7 +141,6 @@ const LungsExperiment = {
               <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/><polyline points="9 3 3 3 3 9"/><line x1="3" y1="3" x2="10" y2="10"/><polyline points="15 21 21 21 21 15"/><line x1="21" y1="21" x2="14" y2="14"/></svg>
             </button>
             <button class="scene-btn" id="btnResetLungsView" title="Kembalikan sudut pandang" aria-label="Kembalikan sudut pandang"><svg class="ico" aria-hidden="true"><use href="#i-target"/></svg></button>
-            <button class="scene-btn" id="btnLungsWireframe" title="Wireframe" aria-label="Mode wireframe"><svg class="ico" aria-hidden="true"><use href="#i-cube"/></svg></button>
           </div>
           <div class="mobile-controls">
             <button class="mobile-btn" id="btnLungsZoomIn" aria-label="Perbesar"><svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg></button>
@@ -179,6 +178,11 @@ const LungsExperiment = {
             <input type="range" class="range-slider" id="sliderLungsOpacity" min="15" max="100" value="62" step="1" aria-label="Opasitas jaringan">
           </div>
           <div class="control-group">
+            <div class="control-label"><span>Lama merokok</span><span class="value-badge" id="smokeYearsVal">10 tahun</span></div>
+            <input type="range" class="range-slider" id="sliderSmokeYears" min="0" max="30" value="10" step="1" aria-label="Lama merokok (tahun)">
+            <div style="font-size:.72rem;opacity:.7;margin-top:.25rem">Berlaku saat simulasi paparan asap dinyalakan.</div>
+          </div>
+          <div class="control-group">
             <div class="control-label"><span>Rekaman spirogram (simulasi)</span></div>
             <canvas id="spiroCanvas" class="lx-spiro" width="320" height="86" aria-label="Grafik Spirogram simulasi"></canvas>
           </div>
@@ -210,6 +214,7 @@ const LungsExperiment = {
 
     this.setupLook(sc);
     this.buildLungs();
+    this.buildSmoke();
     this.setupInteractions();
     this.setupControls();
     this.setupLabels();
@@ -294,6 +299,129 @@ const LungsExperiment = {
     }));
     st.airParticles.frustumCulled = false;
     kit.root.add(st.airParticles);
+  },
+
+  // ---------- Simulasi asap rokok: asap menyusuri saluran napas + lapisan tar yang bertambah ----------
+  makeTarTexture() {
+    const c = document.createElement('canvas'); c.width = c.height = 512;
+    const x = c.getContext('2d');
+    x.fillStyle = '#000'; x.fillRect(0, 0, 512, 512);
+    x.globalCompositeOperation = 'lighter';
+    let s = 9173; const r = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+    for (let i = 0; i < 700; i++) {
+      const px = r() * 512, py = r() * 512, rad = 5 + r() * r() * 40, a = 0.12 + r() * 0.4;
+      const g = x.createRadialGradient(px, py, 0, px, py, rad);
+      g.addColorStop(0, `rgba(255,255,255,${a})`); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(px - rad, py - rad, rad * 2, rad * 2);
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 1.5);
+    return t;
+  },
+
+  buildSmoke() {
+    const st = this.state, kit = st.kit, T = THREE;
+    const tex = this.makeTarTexture();
+    const uvName = parseInt(T.REVISION, 10) >= 151 ? 'vMapUv' : 'vUv';
+    st.tar = [kit.rightLung, kit.leftLung].map((lung) => {
+      const mat = new T.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
+      mat.userData.uTar = { value: 0 };
+      mat.onBeforeCompile = (sh) => {
+        sh.uniforms.uTar = mat.userData.uTar;
+        sh.fragmentShader = sh.fragmentShader
+          .replace('void main() {', 'uniform float uTar;\nvoid main() {')
+          .replace('#include <map_fragment>', `
+            float tn = texture2D( map, ${uvName} ).r;
+            float tk = clamp( uTar, 0.0, 1.0 ) * 0.82;
+            float ta = smoothstep( 1.0 - tk, 1.0 - tk + 0.1, tn ) * step( 0.001, uTar );
+            diffuseColor = vec4( vec3( 0.015, 0.015, 0.02 ), ta * 0.88 );`);
+      };
+      const m = new T.Mesh(lung.geometry, mat);
+      m.scale.setScalar(1.004); m.renderOrder = 6; m.visible = false;
+      lung.add(m); kit.dissectables.push(mat);
+      return m;
+    });
+
+    // partikel asap: masuk lewat trakea saat inspirasi, sebagian menempel di saluran napas
+    const N = 240;
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(new Float32Array(N * 3), 3));
+    geo.setAttribute('color', new T.BufferAttribute(new Float32Array(N * 3), 3));
+    const pts = new T.Points(geo, new T.PointsMaterial({
+      size: 0.12, map: kit.glowTex, vertexColors: true, transparent: true, opacity: 0.6, depthWrite: false, sizeAttenuation: true
+    }));
+    pts.frustumCulled = false; pts.visible = false;
+    kit.frame.add(pts);
+    st.smokePts = pts;
+    st.smoke = Array.from({ length: N }, () => { const p = { j: new T.Vector3(), c: 0 }; this.respawnSmoke(p); return p; });
+    this.applySmokeLook();
+  },
+
+  respawnSmoke(p) {
+    p.pi = Math.floor(Math.random() * 4);          // jalur masuk: 0-1 paru kanan, 2-3 paru kiri
+    p.t = 0; p.state = 0; p.age = 0;
+    p.stop = 0.45 + Math.random() * 0.55;           // seberapa dalam asap terhirup
+    p.dep = Math.random() < 0.35;                   // true = menempel (tidak ikut terhembus)
+    p.v = 0.8 + Math.random() * 0.4;
+    p.j.set((Math.random() - 0.5) * 0.07, (Math.random() - 0.5) * 0.07, (Math.random() - 0.5) * 0.07);
+  },
+
+  // warna paru, alveolus, dan lapisan tar mengikuti st.smokeLevel (0..1)
+  applySmokeLook() {
+    const st = this.state, kit = st.kit, T = THREE, L = st.smokeLevel;
+    if (!this._cA) { this._cA = new T.Color(); this._cLung = new T.Color(0xd9777b); this._cLungD = new T.Color(0x525866); this._cAlv = new T.Color(0xffb8c6); this._cAlvD = new T.Color(0x64748b); }
+    this._cA.copy(this._cLung).lerp(this._cLungD, L);
+    kit.rightLung.material.color.copy(this._cA);
+    kit.leftLung.material.color.copy(this._cA);
+    const a0 = kit.alveoli[0], am = a0 && a0.children[0] && a0.children[0].material;
+    if (am) am.color.copy(this._cAlv).lerp(this._cAlvD, L);
+    st.tar.forEach(m => { m.material.userData.uTar.value = L; m.visible = L > 0.01; });
+    st.smokeFactor = 1 - 0.35 * L;                  // paru kurang lentur -> napas lebih dangkal
+  },
+
+  updateSmoke(dt, ph, strength) {
+    const st = this.state, pts = st.smokePts, kit = st.kit;
+    if (!pts) return;
+    if (!st.isSmoking) {
+      if (pts.visible) { pts.visible = false; st.smoke.forEach(p => this.respawnSmoke(p)); }
+      return;
+    }
+    pts.visible = st.explode < 0.05;
+    if (!pts.visible) return;
+    if (!this._smTmp) this._smTmp = new THREE.Vector3();
+    const tmp = this._smTmp, pos = pts.geometry.attributes.position, col = pts.geometry.attributes.color, a = pos.array, cc = col.array;
+    const wi = ph > 0.02 && ph < 0.44 ? Math.sin(Math.PI * (ph - 0.02) / 0.42) : 0;
+    const wo = ph > 0.44 && ph < 0.88 ? Math.sin(Math.PI * (ph - 0.44) / 0.44) : 0;
+    const dph = dt * st.rpm / 60, sF = 0.4 + 0.6 * Math.min(1, strength);
+    let colDirty = false;
+    for (let i = 0; i < st.smoke.length; i++) {
+      const p = st.smoke[i];
+      if (p.state === 0) {                           // menunggu dihirup
+        if (wi > 0.05 && Math.random() < dt * 2 * wi) p.state = 1;
+        else { a[i * 3] = 0; a[i * 3 + 1] = 500; a[i * 3 + 2] = 0; continue; }
+      }
+      if (p.state === 1) {
+        if (wi > 0) {
+          p.t += dph * 2.6 * sF * wi * p.v;
+          if (p.t >= p.stop) { p.t = p.stop; if (p.dep) { p.state = 2; p.age = 0; } }
+        } else if (wo > 0) {
+          p.t -= dph * 2.6 * sF * wo * p.v * 0.9;
+          if (p.t <= 0) { this.respawnSmoke(p); continue; }
+        }
+      } else {                                       // menempel: perlahan hilang
+        p.age += dt;
+        if (p.age > 5) { this.respawnSmoke(p); continue; }
+      }
+      const c = p.state === 2 ? 1 : 0;
+      if (c !== p.c || (cc[i * 3] === 0 && cc[i * 3 + 1] === 0)) {
+        p.c = c; colDirty = true;
+        if (c) { cc[i * 3] = 0.22; cc[i * 3 + 1] = 0.2; cc[i * 3 + 2] = 0.19; } else { cc[i * 3] = 0.72; cc[i * 3 + 1] = 0.75; cc[i * 3 + 2] = 0.82; }
+      }
+      kit.paths[p.pi].curve.getPoint(Math.min(Math.max(p.t, 0), 0.994), tmp);
+      a[i * 3] = tmp.x + p.j.x; a[i * 3 + 1] = tmp.y + p.j.y; a[i * 3 + 2] = tmp.z + p.j.z;
+    }
+    pos.needsUpdate = true;
+    if (colDirty) col.needsUpdate = true;
   },
 
   // ---------- Terapkan Bedah Lapisan 3D (0..100) ----------
@@ -469,12 +597,6 @@ const LungsExperiment = {
     }
 
     document.getElementById('btnResetLungsView').onclick = () => { st.focus = null; sc.resetCamera(); };
-    let wire = false;
-    document.getElementById('btnLungsWireframe').onclick = () => {
-      wire = !wire;
-      sc.scene.traverse(o => { if (o.isMesh && o.material && o.material.visible !== false) o.material.wireframe = wire; });
-    };
-
     const toggle = (id, flag, apply) => {
       const b = document.getElementById(id);
       b.onclick = () => { st[flag] = !st[flag]; b.setAttribute('aria-pressed', String(st[flag])); apply && apply(st[flag]); };
@@ -546,32 +668,41 @@ const LungsExperiment = {
     btnSmoke.onclick = () => {
       st.isSmoking = !st.isSmoking;
       if (st.isSmoking) {
-        kit.rightLung.material.color.setHex(0x525866);
-        kit.leftLung.material.color.setHex(0x525866);
-        kit.alveoli.forEach(cl => cl.children.forEach(s => s.material.color.setHex(0x64748b)));
         btnSmoke.textContent = '✨ Bersihkan Paru-paru';
         btnSmoke.classList.replace('btn-primary', 'btn-secondary');
+        if (typeof Progress !== 'undefined') {
+          const lv = Math.max(0.08, st.smokeYears / 30);
+          Progress.addData('lungs', { condition: 'Paparan asap rokok (' + st.smokeYears + ' tahun)', value: 'SpO₂ ≈ ' + Math.round(98 - 6 * lv) + '%' });
+        }
       } else {
-        kit.rightLung.material.color.setHex(0xd9777b);
-        kit.leftLung.material.color.setHex(0xd9777b);
-        kit.alveoli.forEach(cl => cl.children.forEach(s => s.material.color.setHex(0xffb8c6)));
         btnSmoke.textContent = '🚬 Simulasi Paparan Asap';
         btnSmoke.classList.replace('btn-secondary', 'btn-primary');
       }
       if (typeof Sound !== 'undefined') Sound.click();
     };
 
+    const smokeSlider = document.getElementById('sliderSmokeYears');
+    if (smokeSlider) {
+      smokeSlider.style.setProperty('--p', (st.smokeYears / 30 * 100) + '%');
+      smokeSlider.oninput = (e) => {
+        st.smokeYears = +e.target.value;
+        document.getElementById('smokeYearsVal').textContent = st.smokeYears + ' tahun';
+        e.target.style.setProperty('--p', (st.smokeYears / 30 * 100) + '%');
+      };
+    }
+
     document.getElementById('btnResetLungs').onclick = () => {
       st.depth = 50; st.rpm = 16; st.type = 'normal'; st.isSmoking = false;
+      st.smokeYears = 10; st.smokeLevel = 0; this.applySmokeLook();
+      const sy = document.getElementById('sliderSmokeYears');
+      if (sy) { sy.value = 10; sy.style.setProperty('--p', (10 / 30 * 100) + '%'); }
+      const syv = document.getElementById('smokeYearsVal'); if (syv) syv.textContent = '10 tahun';
       document.getElementById('sliderLungsDepth').value = 50;
       document.getElementById('lungsDepth').textContent = '50%';
       document.getElementById('selectLungsType').value = 'normal';
       document.getElementById('sliderLungsOpacity').value = 62;
       document.getElementById('lungsOpacityVal').textContent = '62%';
       kit.glass.forEach(m => { m.opacity = m.userData.baseOpacity; m.userData.minU.value = 0.28; });
-      kit.rightLung.material.color.setHex(0xd9777b);
-      kit.leftLung.material.color.setHex(0xd9777b);
-      kit.alveoli.forEach(cl => cl.children.forEach(s => s.material.color.setHex(0xffb8c6)));
       btnSmoke.textContent = '🚬 Simulasi Paparan Asap';
       btnSmoke.classList.replace('btn-secondary', 'btn-primary');
       this.applyDissect(0);
@@ -583,10 +714,11 @@ const LungsExperiment = {
 
   updateResult() {
     const st = this.state;
+    const L = st.smokeLevel || 0;
     const base = st.type === 'normal' ? 500 : st.type === 'dalam' ? 2000 : 3500;
-    const rate = st.type === 'normal' ? 16 : st.type === 'dalam' ? 20 : 28;
+    const rate = (st.type === 'normal' ? 16 : st.type === 'dalam' ? 20 : 28) + Math.round(4 * L);   // perokok bernapas sedikit lebih cepat
     st.rpm = rate;
-    document.getElementById('statLungsVol').textContent = Math.round(base * (st.depth / 100));
+    document.getElementById('statLungsVol').textContent = Math.round(base * (st.depth / 100) * (1 - 0.35 * L));
     document.getElementById('statLungsRate').textContent = rate;
     if (typeof Sound !== 'undefined' && Sound.isEnabled() && Sound.setLungsDepth) {
       const typeNum = st.type === 'normal' ? 1 : st.type === 'dalam' ? 2 : 3;
@@ -649,7 +781,7 @@ const LungsExperiment = {
   spiroValue(ph) {
     const S = LungsKit.sstep;
     const wave = S(0.02, 0.42, ph) - S(0.44, 0.88, ph);
-    const strength = this.state.depth / 100;
+    const strength = (this.state.depth / 100) * (this.state.smokeFactor || 1);
     const mult = this.state.type === 'normal' ? 0.38 : this.state.type === 'dalam' ? 0.68 : 0.96;
     return (wave - 0.35) * 1.45 * strength * mult;
   },
@@ -679,6 +811,16 @@ const LungsExperiment = {
       if (st.phase >= 1) st.phase -= 1;
       const ph = st.phase;
 
+      // tingkat kerusakan akibat asap naik/turun bertahap menuju target
+      const smokeTarget = st.isSmoking ? Math.max(0.08, st.smokeYears / 30) : 0;
+      if (Math.abs(smokeTarget - st.smokeLevel) > 1e-4) {
+        const stp = (smokeTarget > st.smokeLevel ? 0.3 : 0.5) * dt;
+        st.smokeLevel += Math.max(-stp, Math.min(stp, smokeTarget - st.smokeLevel));
+        this.applySmokeLook();
+        const key = Math.round(st.smokeLevel * 20);
+        if (key !== this._smokeKey) { this._smokeKey = key; this.updateResult(); }
+      }
+
       // Interpolasi halus untuk Urai Struktur (Exploded View)
       if (kit.explodables && Math.abs(st.explode - st.explodeTarget) > 0.0005) {
         st.explode += (st.explodeTarget - st.explode) * Math.min(1, dt * 8);
@@ -688,7 +830,8 @@ const LungsExperiment = {
       }
 
       const breath = S(0.02, 0.42, ph) - S(0.44, 0.88, ph);
-      const strength = (st.depth / 100) * (st.type === 'normal' ? 0.65 : st.type === 'dalam' ? 0.88 : 1.15);
+      const strength = (st.depth / 100) * (st.type === 'normal' ? 0.65 : st.type === 'dalam' ? 0.88 : 1.15) * st.smokeFactor;
+      if (typeof Sound !== 'undefined' && Sound.updateBreath) Sound.updateBreath(ph, strength, st.rpm);   // suara napas ikut fase & kedalaman
 
       const sx = 1 + 0.13 * breath * strength;
       const sy = 1 + 0.11 * breath * strength;
@@ -721,30 +864,8 @@ const LungsExperiment = {
       });
       pos.needsUpdate = true;
 
-      // partikel asap rokok jika simulasi aktif
-      if (st.isSmoking) {
-        if (!st.smokeParticles) {
-          const sGeo = new THREE.BufferGeometry();
-          const sArr = new Float32Array(120 * 3);
-          for (let i = 0; i < 360; i++) sArr[i] = (Math.random() - 0.5) * 2.6;
-          sGeo.setAttribute('position', new THREE.BufferAttribute(sArr, 3));
-          st.smokeParticles = new THREE.Points(sGeo, new THREE.PointsMaterial({
-            color: 0x94a3b8, size: 0.22, map: kit.glowTex, transparent: true, opacity: 0.48, depthWrite: false
-          }));
-          kit.root.add(st.smokeParticles);
-        }
-        const sPos = st.smokeParticles.geometry.attributes.position.array;
-        for (let i = 0; i < sPos.length; i += 3) {
-          sPos[i] += Math.sin(el + i) * 0.006;
-          sPos[i + 1] -= 0.012;
-          sPos[i + 2] += Math.cos(el + i) * 0.006;
-          if (sPos[i + 1] < -1.8) sPos[i + 1] = 2.4;
-        }
-        st.smokeParticles.geometry.attributes.position.needsUpdate = true;
-      } else if (st.smokeParticles) {
-        kit.root.remove(st.smokeParticles);
-        st.smokeParticles = null;
-      }
+      // asap rokok menyusuri saluran napas
+      this.updateSmoke(dt, ph, strength);
 
       st.lungsGroup.rotation.y = Math.sin(el * 0.25) * 0.1;
       if (st.focus) {

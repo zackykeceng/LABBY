@@ -63,7 +63,7 @@ const App = {
         Sound.resume();
         
         setTimeout(() => {
-          Sound.playAmbient(index === 0 ? 'heart' : 'lungs');
+          this.playAmbientFor(index);
           if (this.experiments[index] && typeof this.experiments[index].updateResult === 'function') {
              this.experiments[index].updateResult();
           }
@@ -87,9 +87,13 @@ const App = {
     transition.classList.add('active');
 
     setTimeout(() => {
+      this.hideReturn();
       document.getElementById('appScreen').style.display = 'none';
-      document.getElementById('homeScreen').style.display = 'flex';
+      // Kosongkan inline style agar beranda kembali memakai display bawaan CSS
+      // (sama seperti saat pertama dibuka), bukan 'flex' yang mengubah lebar kartu.
+      document.getElementById('homeScreen').style.display = '';
       window.scrollTo(0, 0);
+      updateHomeProgress(); // segarkan bar & teks progres di kartu beranda
       
       if (this.experiments[this.currentExp] && typeof this.experiments[this.currentExp].setVisible === 'function') {
         this.experiments[this.currentExp].setVisible(false);
@@ -108,6 +112,47 @@ const App = {
       }, 500);
 
     }, 600);
+  },
+
+  // Suara latar hanya ada untuk jantung dan paru-paru
+  playAmbientFor(index) {
+    if (typeof Sound === 'undefined') return;
+    if (index === 0) Sound.playAmbient('heart');
+    else if (index === 1) Sound.playAmbient('lungs');
+    else Sound.stopAmbient();
+  },
+
+  // Pindah sebentar ke menu lain (mis. dari LKPD ke model 3D jantung) lalu jalankan aksi.
+  // Tombol melayang "Kembali" muncul agar siswa bisa balik ke tempat semula.
+  jumpTo(index, after) {
+    const from = this.currentExp;
+    this.switchTab(index);
+    this.showReturn(from);
+    setTimeout(() => { try { if (after) after(); } catch (e) { console.warn(e); } }, 150);
+  },
+
+  showReturn(from) {
+    const names = ['jantung', 'paru-paru', 'LKPD', 'kuis'];
+    let b = document.getElementById('btnReturn');
+    if (!b) {
+      b = document.createElement('button');
+      b.id = 'btnReturn';
+      b.type = 'button';
+      b.className = 'return-pill';
+      b.addEventListener('click', () => {
+        if (typeof Sound !== 'undefined') Sound.click();
+        this.switchTab(parseInt(b.dataset.to, 10));
+      });
+      document.getElementById('appScreen').appendChild(b);
+    }
+    b.dataset.to = from;
+    b.textContent = '← Kembali ke ' + (names[from] || 'menu');
+    b.style.display = 'inline-flex';
+  },
+
+  hideReturn() {
+    const b = document.getElementById('btnReturn');
+    if (b) b.style.display = 'none';
   },
 
   // Isian warna pada slider (CSS memakai variabel --p)
@@ -144,6 +189,8 @@ const App = {
   registerExperiments() {
     if (typeof HeartExperiment !== 'undefined') this.experiments[0] = HeartExperiment;
     if (typeof LungsExperiment !== 'undefined') this.experiments[1] = LungsExperiment;
+    if (typeof LkpdSection !== 'undefined') this.experiments[2] = LkpdSection;
+    if (typeof QuizSection !== 'undefined') this.experiments[3] = QuizSection;
   },
 
   renderAllExperiments() {
@@ -152,7 +199,7 @@ const App = {
         if (typeof exp.render === 'function') exp.render();
       } catch (err) {
         console.error(`❌ Render GAGAL:`, err);
-        const panel = document.getElementById(i === '0' ? 'panelHeart' : 'panelLungs');
+        const panel = document.getElementById({ 0: 'panelHeart', 1: 'panelLungs', 2: 'panelLkpd', 3: 'panelQuiz' }[i]);
         if (panel) panel.innerHTML = `<div class="exp-header"><div class="info-box red"><div>⚠️</div><div><b>Gagal memuat eksperimen.</b><br>${err.message}</div></div></div>`;
       }
     });
@@ -194,6 +241,7 @@ const App = {
   },
 
   switchTab(index) {
+    this.hideReturn();
     if (index === this.currentExp) {
       if (this.experiments[index] && typeof this.experiments[index].setVisible === 'function') {
         this.experiments[index].setVisible(true);
@@ -222,9 +270,7 @@ const App = {
       newExp.state.scene.resetCamera();
     }
 
-    if (typeof Sound !== 'undefined' && Sound.isEnabled()) {
-      Sound.playAmbient(index === 0 ? 'heart' : 'lungs');
-    }
+    if (typeof Sound !== 'undefined' && Sound.isEnabled()) this.playAmbientFor(index);
 
     setTimeout(() => {
       if (newExp && newExp.state && newExp.state.scene) {
@@ -269,7 +315,7 @@ const App = {
           Sound.info();
           setTimeout(() => {
             if (document.getElementById('appScreen').style.display !== 'none') {
-              Sound.playAmbient(this.currentExp === 0 ? 'heart' : 'lungs');
+              this.playAmbientFor(this.currentExp);
             }
           }, 300);
         } else { Sound.stopAmbient(); }
@@ -295,9 +341,24 @@ function updateHomeProgress() {
   if (typeof Progress === 'undefined') return;
   document.querySelectorAll('.exp-progress').forEach((el) => {
     const exp = el.dataset.exp;
-    const done = (Progress.state.missions[exp] || []).length;
     const fill = el.querySelector('i'), txt = el.querySelector('.txt');
-    if (fill) fill.style.width = Math.min(100, (done / 3) * 100) + '%';
-    if (txt) txt.textContent = done === 0 ? 'Belum dimulai' : done >= 3 ? 'Semua misi selesai' : `${done} dari 3 misi selesai`;
+    let pct, label;
+    if (exp === 'lkpd') {
+      const m = Progress.state.missions.heart || [];
+      const done = ['m1', 'm2'].filter((id) => m.includes(id)).length;
+      pct = (done / 2) * 100;
+      label = done === 0 ? 'Belum dimulai' : done >= 2 ? 'Semua aktivitas selesai' : `${done} dari 2 aktivitas selesai`;
+    } else if (exp === 'kuis') {
+      let correct = 0, total = 0;
+      ['heart', 'lungs'].forEach((k) => { const r = Progress.isQuizComplete(k); correct += r.correct; total += r.total; });
+      pct = total ? (correct / total) * 100 : 0;
+      label = correct === 0 ? 'Belum dimulai' : correct >= total ? 'Semua soal benar' : `${correct} dari ${total} soal benar`;
+    } else {
+      const done = (Progress.state.missions[exp] || []).length;
+      pct = (done / 3) * 100;
+      label = done === 0 ? 'Belum dimulai' : done >= 3 ? 'Semua misi selesai' : `${done} dari 3 misi selesai`;
+    }
+    if (fill) fill.style.width = Math.min(100, pct) + '%';
+    if (txt) txt.textContent = label;
   });
 }

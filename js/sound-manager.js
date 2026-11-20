@@ -211,6 +211,8 @@ class SoundManager {
       this._ambientLfo.start();
       
     } else if (expName === 'lungs') {
+      // Noise napas: volume & warna suara digerakkan langsung oleh updateBreath()
+      // (disinkronkan dengan fase napas dan kedalaman napas pada animasi 3D).
       const bufferSize = this.ctx.sampleRate * 3;
       const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
       const data = buffer.getChannelData(0);
@@ -222,57 +224,48 @@ class SoundManager {
 
       this._breathFilter = this.ctx.createBiquadFilter();
       this._breathFilter.type = 'bandpass';
-      this._breathFilter.frequency.value = 1000; 
+      this._breathFilter.frequency.value = 1000;
       this._breathFilter.Q.value = 1.0;
 
       this._breathGain = this.ctx.createGain();
-      this._breathGain.gain.value = 0; 
-
-      this._breathLfo = this.ctx.createOscillator();
-      this._breathLfo.type = 'sine';
-      this._breathLfo.frequency.value = 0.25; 
-
-      this._breathLfoGain = this.ctx.createGain();
-      this._breathLfoGain.gain.value = 0;
-
-      this._breathLfo.connect(this._breathLfoGain);
-      this._breathLfoGain.connect(this._breathGain.gain);
+      this._breathGain.gain.value = 0;
 
       this._breathSource.connect(this._breathFilter);
       this._breathFilter.connect(this._breathGain);
       this._breathGain.connect(this.ctx.destination);
-
       this._breathSource.start();
-      this._breathLfo.start();
-      
-      if (this._currentAmbient === 'lungs') {
-          const targetFreq = 0.8; 
-          this.breathClock.cycleDuration = 1 / targetFreq;
-          this._breathLfo.frequency.setValueAtTime(targetFreq, this.ctx.currentTime);
-          this._breathLfoGain.gain.setValueAtTime(0.15, this.ctx.currentTime);
-          this._breathFilter.frequency.setValueAtTime(1100, this.ctx.currentTime);
-      }
     }
   }
 
-  setLungsDepth(depth, type) {
-    if (!this.ctx) return;
+  // Dipanggil tiap frame dari animasi paru-paru.
+  // ph       : fase siklus napas 0..1 (sama dengan st.phase)
+  // strength : kekuatan napas (kedalaman x jenis aktivitas), sama dengan yang menggerakkan paru-paru 3D
+  // rpm      : napas per menit
+  updateBreath(ph, strength, rpm) {
+    if (rpm > 0) this.breathClock.cycleDuration = 60 / rpm;
+    if (!this.ctx || this._currentAmbient !== 'lungs' || !this._breathGain || !this._breathFilter) return;
+    if (this.ctx.state !== 'running') return;
+
+    const BREATH_PEAK = 0.18;                       // volume maksimum (turunkan untuk lebih pelan)
+    const s = Math.min(1, Math.max(0, strength));
+    let kind = 0, env = 0;
+    if (ph > 0.02 && ph < 0.44) { kind = 1; env = Math.sin(Math.PI * (ph - 0.02) / 0.42); }          // inspirasi
+    else if (ph >= 0.44 && ph < 0.88) { kind = 2; env = 0.8 * Math.sin(Math.PI * (ph - 0.44) / 0.44); } // ekspirasi, sedikit lebih lembut
+
+    // napas dangkal -> pelan & tipis; napas dalam -> lebih keras, rendah, dan "berisi"
+    const peak = (0.03 + (BREATH_PEAK - 0.03) * Math.pow(s, 0.8)) * (this.masterVolume / 0.5);
+    const base = 1500 - s * 800;
+    const freq = kind === 2 ? base * 0.85 * (0.8 + 0.3 * env) : base * (0.8 + 0.4 * env);
+    const q = 1.2 - 0.5 * s;
+
     const now = this.ctx.currentTime;
-    const d = depth / 100; 
-    
-    let baseSpeed = type === 1 ? 1.0 : type === 2 ? 0.7 : 0.4;
-    const targetFreq = baseSpeed * (1.2 - d * 0.5);
-    
-    this.breathClock.cycleDuration = 1 / targetFreq;
-
-    if (this._currentAmbient !== 'lungs') return;
-
-    this._breathLfo.frequency.setTargetAtTime(targetFreq, now, 0.1);
-    const targetVol = 0.05 + (d * 0.20);
-    this._breathLfoGain.gain.setTargetAtTime(targetVol, now, 0.1);
-    const targetFilter = 1500 - (d * 800);
-    this._breathFilter.frequency.setTargetAtTime(targetFilter, now, 0.1);
+    this._breathGain.gain.setTargetAtTime(peak * env, now, 0.04);
+    this._breathFilter.frequency.setTargetAtTime(freq, now, 0.06);
+    this._breathFilter.Q.setTargetAtTime(q, now, 0.1);
   }
+
+  // Dipertahankan agar pemanggil lama tidak error; suara napas kini diatur oleh updateBreath().
+  setLungsDepth(depth, type) {}
 
   setAmbientRate(rate) {
     if (!this.ctx) return;

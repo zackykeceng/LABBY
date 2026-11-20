@@ -11,8 +11,8 @@ const HeartExperiment = {
     focus: null, ecg: []
   },
   missions: [
-    { id: 'm1', text: 'Putar jantung dan klik Bilik Kiri' },
-    { id: 'm2', text: 'Ubah aktivitas menjadi Olahraga Berat' },
+    { id: 'm1', text: 'Aktivitas 2: beri label 8 bagian jantung dan pembuluh darah dengan benar' },
+    { id: 'm2', text: 'Aktivitas 3: susun peredaran darah kecil dan besar dengan benar' },
     { id: 'm3', text: 'Selesaikan kuis dengan benar' }
   ],
   aktivitasData: {
@@ -417,7 +417,6 @@ const HeartExperiment = {
       infoBox.classList.add('show');
     }
     if (typeof Sound !== 'undefined') Sound.click();
-    if (key === 'lv' && typeof Progress !== 'undefined') Progress.completeMission('heart', 'm1');
 
     // sorot struktur terpilih (emissive), rim cyan pada serambi kanan untuk SA/AV, flash pada jalur listrik
     kit.clickables.forEach(o => {
@@ -522,7 +521,6 @@ const HeartExperiment = {
       setTimeout(() => badge.classList.remove('changed'), 350);
       this.updateResult();
       Progress.addData('heart', { condition: data.nama, value: data.bpm + ' BPM' });
-      if (e.target.value === 'olahraga') Progress.completeMission('heart', 'm2');
     };
     document.getElementById('sliderHeartBpm').oninput = (e) => {
       st.bpm = +e.target.value;
