@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -18,6 +17,7 @@
 <link rel="stylesheet" href="css/heart.css">
 <link rel="stylesheet" href="css/lungs.css">
 <link rel="stylesheet" href="css/playful.css">
+<link rel="stylesheet" href="css/pro.css">
 <script type="importmap">
 {
   "imports": {
@@ -58,6 +58,43 @@
   </defs>
 </svg>
 
+<!-- Animasi pembuka saat pertama masuk web -->
+<div id="introSplash" class="intro" role="presentation" aria-hidden="true">
+  <div class="intro-inner">
+    <span class="wordmark intro-mark"><span>L</span><span>a</span><span>b</span><span>b</span><span>y</span></span>
+    <p class="intro-title">
+      <span class="w" style="--i:0">Yuk,</span>
+      <span class="w hl" style="--i:1">intip</span>
+      <span class="w" style="--i:2">isi</span>
+      <span class="w c1" style="--i:3">tubuhmu</span>
+      <span class="w" style="--i:4">lewat</span>
+      <span class="w" style="--i:5">model</span>
+      <span class="w c2" style="--i:6">3D!</span>
+    </p>
+    <svg class="intro-pulse" viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path pathLength="1" d="M0 70 h390 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h110 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h390"/>
+    </svg>
+    <span class="intro-skip">Ketuk di mana saja untuk lanjut</span>
+  </div>
+</div>
+<script>
+(function () {
+  var el = document.getElementById('introSplash');
+  if (!el) return;
+  var done = false;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function end() {
+    if (done) return; done = true;
+    el.classList.add('out');
+    document.removeEventListener('keydown', end);
+    setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 900);
+  }
+  el.addEventListener('click', end);
+  document.addEventListener('keydown', end);
+  setTimeout(end, reduce ? 1500 : 3800);
+})();
+</script>
+
 <!-- Transisi antar layar -->
 <div id="pageTransition" class="page-transition" aria-hidden="true">
   <div class="loader">
@@ -71,14 +108,19 @@
   <div class="home-inner">
     <header class="home-top">
       <span class="wordmark" aria-label="Labby"><span aria-hidden="true">L</span><span aria-hidden="true">a</span><span aria-hidden="true">b</span><span aria-hidden="true">b</span><span aria-hidden="true">y</span></span>
-      <span class="home-tag">Lab sains seru untuk kelas 8</span>
     </header>
 
     <section class="home-hero">
-      <h1 class="home-title">Yuk, intip isi tubuhmu lewat model 3D!</h1>
-      <p class="home-lead">Putar jantung dan paru-paru, coba ubah detak dan napasnya, lalu catat apa yang kamu temukan.</p>
+      <h1 class="sr-only">Labby — Belajar sains interaktif</h1>
       <svg class="home-pulse" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
-        <path class="pulse-heart" pathLength="1" d="M0 70 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110"/>
+        <defs>
+          <!-- Garis muncul dari kiri ke kanan (reveal) -->
+          <clipPath id="pulseReveal"><rect class="pulse-reveal" x="0" y="-30" width="1200" height="180"/></clipPath>
+          <!-- Kilau yang terus berjalan di sepanjang garis -->
+          <clipPath id="pulseSweep"><rect class="pulse-sweep" x="0" y="-30" width="200" height="180"/></clipPath>
+        </defs>
+        <path class="pulse-heart" clip-path="url(#pulseReveal)" d="M0 70 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110"/>
+        <path class="pulse-glow" clip-path="url(#pulseSweep)" d="M0 70 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110 h90 l8-6 8 6 h14 l8-40 12 76 10-36 h24 l8-8 8 8 h110"/>
       </svg>
     </section>
 
@@ -92,7 +134,7 @@
         <span class="exp-body">
           <span class="exp-name">Jantung</span>
           <span class="exp-sub">Lihat bagaimana darah dipompa dan listrik mengatur detaknya</span>
-          <span class="exp-meta"><span>20 struktur</span><span>3 misi</span><span>3 soal</span></span>
+          <span class="exp-meta"><span>20 struktur</span><span>3 misi</span></span>
           <span class="exp-progress" data-exp="heart"><span class="bar"><i></i></span><span class="txt">Belum dimulai</span></span>
         </span>
         <span class="exp-go"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg><span class="sr-only">Mulai eksperimen jantung</span></span>
@@ -110,14 +152,44 @@
         <span class="exp-body">
           <span class="exp-name">Paru-paru</span>
           <span class="exp-sub">Lihat cara kita bernapas dan apa yang terjadi saat terkena asap</span>
-          <span class="exp-meta"><span>15 struktur</span><span>3 misi</span><span>3 soal</span></span>
+          <span class="exp-meta"><span>15 struktur</span><span>3 misi</span></span>
           <span class="exp-progress" data-exp="lungs"><span class="bar"><i></i></span><span class="txt">Belum dimulai</span></span>
         </span>
         <span class="exp-go"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg><span class="sr-only">Mulai eksperimen paru-paru</span></span>
       </button>
+
+      <button class="exp-card exp-lkpd" onclick="App.openExperiment(2)">
+        <svg class="exp-art" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="art-glow" d="M30 26h60v80H30z"/>
+          <path d="M30 26h60v80H30zM46 16h28v14H46z"/>
+          <path d="M42 52l4 4 8-9M60 52h20M42 72l4 4 8-9M60 72h20M42 92h8M60 92h20"/>
+        </svg>
+        <span class="exp-body">
+          <span class="exp-name">LKPD</span>
+          <span class="exp-sub">Isi lembar kerja sistem peredaran darah langsung di layar</span>
+          <span class="exp-meta"><span>5 aktivitas</span><span>8 label</span><span>1 studi kasus</span></span>
+          <span class="exp-progress" data-exp="lkpd"><span class="bar"><i></i></span><span class="txt">Belum dimulai</span></span>
+        </span>
+        <span class="exp-go"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg><span class="sr-only">Buka LKPD</span></span>
+      </button>
+
+      <button class="exp-card exp-kuis" onclick="App.openExperiment(3)">
+        <svg class="exp-art" viewBox="0 0 120 120" aria-hidden="true">
+          <path class="art-glow" d="M60 16a44 44 0 1 0 0 88a44 44 0 1 0 0-88z"/>
+          <path d="M60 16a44 44 0 1 0 0 88a44 44 0 1 0 0-88z"/>
+          <path d="M46 48c0-9 7-14 15-14s15 5 15 13c0 11-15 12-15 24M61 86h.01"/>
+        </svg>
+        <span class="exp-body">
+          <span class="exp-name">Kuis</span>
+          <span class="exp-sub">Uji pemahamanmu tentang jantung dan paru-paru</span>
+          <span class="exp-meta"><span>8 soal</span><span>2 topik</span></span>
+          <span class="exp-progress" data-exp="kuis"><span class="bar"><i></i></span><span class="txt">Belum dimulai</span></span>
+        </span>
+        <span class="exp-go"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg><span class="sr-only">Mulai kuis</span></span>
+      </button>
     </main>
 
-    <footer class="home-foot">Biologi · Sistem organ manusia · Kelas 8</footer>
+    <footer class="home-foot">Laboratorium IPA 3D untuk siswa kelas 8</footer>
   </div>
 </div>
 
@@ -157,6 +229,8 @@
     <div class="tab-container">
       <button class="tab-item active" data-exp="0" data-color="#d63a4e" tabindex="-1"><span class="tab-label">Jantung dan peredaran darah</span></button>
       <button class="tab-item" data-exp="1" data-color="#12909f" tabindex="-1"><span class="tab-label">Sistem pernapasan</span></button>
+      <button class="tab-item" data-exp="2" data-color="#7c5cff" tabindex="-1"><span class="tab-label">LKPD</span></button>
+      <button class="tab-item" data-exp="3" data-color="#e0912b" tabindex="-1"><span class="tab-label">Kuis</span></button>
     </div>
   </nav>
 
@@ -164,6 +238,22 @@
     <div class="content-container">
       <section class="experiment-panel active" data-panel="0" id="panelHeart"></section>
       <section class="experiment-panel" data-panel="1" id="panelLungs"></section>
+      <section class="experiment-panel" data-panel="2" id="panelLkpd">
+        <div class="exp-header">
+          <span class="exp-badge">Lembar kerja</span>
+          <h2 class="exp-title">LKPD: Sistem peredaran darah</h2>
+          <p class="exp-description">Kerjakan Aktivitas 1 sampai 5 langsung di layar. Jawabanmu tersimpan otomatis. Kalau perlu melihat model 3D, tombol “Lihat di 3D” akan membawamu ke jantung, dan kamu bisa kembali dengan satu klik.</p>
+        </div>
+        <div class="bottom-panel" id="lkpdHost"></div>
+      </section>
+      <section class="experiment-panel" data-panel="3" id="panelQuiz">
+        <div class="exp-header">
+          <span class="exp-badge">Uji pemahaman</span>
+          <h2 class="exp-title">Kuis</h2>
+          <p class="exp-description">Jawab soal tentang jantung dan paru-paru. Setiap soal langsung diberi penjelasan, dan jawabanmu tersimpan.</p>
+        </div>
+        <div class="bottom-panel" id="quizHost"></div>
+      </section>
     </div>
   </main>
 
@@ -205,6 +295,9 @@
     'js/heart-3d.js',
     'js/lungs-kit.js',
     'js/lungs-3d.js',
+    'js/extras-3d.js',
+    'js/lkpd-heart.js',
+    'js/sections.js',
     'js/app.js'
   ];
 
