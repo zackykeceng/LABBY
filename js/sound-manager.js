@@ -5,6 +5,7 @@ class SoundManager {
     this.masterVolume = 0.5;
     this.initialized = false;
     this._unlocked = false;
+    this._simPaused = false;
     
     this._ambientOsc = null;
     this._ambientGain = null;
@@ -89,6 +90,56 @@ class SoundManager {
   }
   isEnabled() { return this.enabled && this.initialized && this.ctx && this.ctx.state === 'running'; }
   resume() { this._tryResume(); }
+
+  // Dipanggil otomatis saat tombol Jeda / Lanjut pada viewport 3D ditekan
+  setSimulationPaused(paused) {
+    this._simPaused = !!paused;
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    if (this._simPaused) {
+      if (this._breathGain) {
+        this._breathGain.gain.cancelScheduledValues(now);
+        this._breathGain.gain.setTargetAtTime(0, now, 0.025);
+      }
+      if (this._ambientGain) {
+        this._ambientGain.gain.cancelScheduledValues(now);
+        this._ambientGain.gain.setTargetAtTime(0, now, 0.025);
+      }
+    } else {
+      if (this._currentAmbient === 'heart' && this._ambientGain) {
+        this._ambientGain.gain.cancelScheduledValues(now);
+        this._ambientGain.gain.setTargetAtTime(0.08 * this.masterVolume, now, 0.04);
+      }
+    }
+  }
+
+  _isLungsScenePaused() {
+    if (this._simPaused) return true;
+    try {
+      return !!(
+        typeof LungsExperiment !== 'undefined' &&
+        LungsExperiment.state &&
+        LungsExperiment.state.scene &&
+        LungsExperiment.state.scene.paused
+      );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  _isHeartScenePaused() {
+    if (this._simPaused) return true;
+    try {
+      return !!(
+        typeof HeartExperiment !== 'undefined' &&
+        HeartExperiment.state &&
+        HeartExperiment.state.scene &&
+        HeartExperiment.state.scene.paused
+      );
+    } catch (e) {
+      return false;
+    }
+  }
 
   _playTone(freq, duration, opts = {}) {
     if (!this.enabled) return;
@@ -176,7 +227,7 @@ class SoundManager {
   }
 
   heartbeat() {
-    if (!this.enabled) return;
+    if (!this.enabled || this._isHeartScenePaused()) return;
     this._playTone(85, 0.09, { type: 'sine', volume: 0.8, freqEnd: 60 });
     this._playTone(70, 0.11, { type: 'sine', volume: 0.6, freqEnd: 50, delay: 0.12 });
   }
@@ -189,12 +240,17 @@ class SoundManager {
     this.stopAmbient();
 
     if (expName === 'lungs') {
+      this._simPaused = this._isLungsScenePaused();
       this.breathClock.startTime = Date.now();
+    } else if (expName === 'heart') {
+      this._simPaused = this._isHeartScenePaused();
+    } else {
+      this._simPaused = false;
     }
 
     if (expName === 'heart') {
       this._ambientGain = this.ctx.createGain();
-      this._ambientGain.gain.value = 0.08 * this.masterVolume; 
+      this._ambientGain.gain.value = this._simPaused ? 0 : (0.08 * this.masterVolume); 
       this._ambientGain.connect(this.ctx.destination);
       this._ambientOsc = this.ctx.createOscillator();
       this._ambientOsc.type = 'sine';
@@ -246,6 +302,14 @@ class SoundManager {
     if (!this.ctx || this._currentAmbient !== 'lungs' || !this._breathGain || !this._breathFilter) return;
     if (this.ctx.state !== 'running') return;
 
+    const now = this.ctx.currentTime;
+
+    // Senyapkan suara napas segera ketika simulasi dijeda
+    if (this._isLungsScenePaused()) {
+      this._breathGain.gain.setTargetAtTime(0, now, 0.025);
+      return;
+    }
+
     const BREATH_PEAK = 0.18;                       // volume maksimum (turunkan untuk lebih pelan)
     const s = Math.min(1, Math.max(0, strength));
     let kind = 0, env = 0;
@@ -258,7 +322,6 @@ class SoundManager {
     const freq = kind === 2 ? base * 0.85 * (0.8 + 0.3 * env) : base * (0.8 + 0.4 * env);
     const q = 1.2 - 0.5 * s;
 
-    const now = this.ctx.currentTime;
     this._breathGain.gain.setTargetAtTime(peak * env, now, 0.04);
     this._breathFilter.frequency.setTargetAtTime(freq, now, 0.06);
     this._breathFilter.Q.setTargetAtTime(q, now, 0.1);
